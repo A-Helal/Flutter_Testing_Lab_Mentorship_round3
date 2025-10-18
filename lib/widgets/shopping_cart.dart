@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/cart_model.dart';
 
 class CartItem {
   final String id;
@@ -24,64 +25,37 @@ class ShoppingCart extends StatefulWidget {
 }
 
 class _ShoppingCartState extends State<ShoppingCart> {
-  final List<CartItem> _items = [];
+  final CartModel _cartModel = CartModel();
 
   void addItem(String id, String name, double price, {double discount = 0.0}) {
     setState(() {
-      _items.add(
-        CartItem(id: id, name: name, price: price, discount: discount),
-      );
+      _cartModel.addItem(id, name, price, discount: discount);
     });
   }
 
   void removeItem(String id) {
     setState(() {
-      _items.removeWhere((item) => item.id == id);
+      _cartModel.removeItem(id);
     });
   }
 
   void updateQuantity(String id, int newQuantity) {
     setState(() {
-      final index = _items.indexWhere((item) => item.id == id);
-      if (index != -1) {
-        if (newQuantity <= 0) {
-          _items.removeAt(index);
-        } else {
-          _items[index].quantity = newQuantity;
-        }
-      }
+      _cartModel.updateQuantity(id, newQuantity);
     });
   }
 
   void clearCart() {
     setState(() {
-      _items.clear();
+      _cartModel.clearCart();
     });
   }
 
-  double get subtotal {
-    double total = 0;
-    for (var item in _items) {
-      total += item.price * item.quantity;
-    }
-    return total;
-  }
-
-  double get totalDiscount {
-    double discount = 0;
-    for (var item in _items) {
-      discount += item.discount * item.quantity;
-    }
-    return discount;
-  }
-
-  double get totalAmount {
-    return subtotal + totalDiscount;
-  }
-
-  int get totalItems {
-    return _items.fold(0, (sum, item) => sum + item.quantity);
-  }
+  double get subtotal => _cartModel.subtotal;
+  double get totalDiscount => _cartModel.totalDiscount;
+  double get totalAmount => _cartModel.totalAmount;
+  int get totalItems => _cartModel.totalItems;
+  List<CartItem> get items => _cartModel.items;
 
   @override
   Widget build(BuildContext context) {
@@ -151,14 +125,14 @@ class _ShoppingCartState extends State<ShoppingCart> {
         ),
         const SizedBox(height: 16),
 
-        _items.isEmpty
+        items.isEmpty
             ? const Center(child: Text('Cart is empty'))
             : ListView.builder(
                 physics: NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
-                itemCount: _items.length,
+                itemCount: items.length,
                 itemBuilder: (context, index) {
-                  final item = _items[index];
+                  final item = items[index];
                   final itemTotal = item.price * item.quantity;
 
                   return Card(
